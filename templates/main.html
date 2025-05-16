@@ -8,8 +8,15 @@
 </head>
 <body>
 
+  <!-- Ekran początkowy -->
+  <div id="start-section">
+    <h1>Witaj! Podaj swoją nazwę</h1>
+    <input id="initial-name" placeholder="Twoja nazwa" />
+    <button onclick="showForm()">Dalej</button>
+  </div>
+
   <!-- Formularz wprowadzania danych -->
-  <div id="form-section">
+  <div id="form-section" style="display: none;">
     <h1>Podaj nazwy użytkowników</h1>
     <input id="input-instagram" placeholder="Instagram Username" />
     <input id="input-youtube" placeholder="YouTube Username" />
@@ -47,8 +54,8 @@
       </button>
     </div>
 
-    <!-- Zakładki zawierające dane -->
-    <div class="tab-content" id="instagram-content" style="display: none;">
+    <!-- Zawartość zakładek -->
+    <div class="tab-content" id="instagram-content">
       <img src="static/zdjecia/instagram.jpg" alt="Instagram profile" class="profile-img" />
       <a id="instagram-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_instagram.png" class="link-icon" alt="Instagram" />
@@ -56,7 +63,7 @@
       </a>
     </div>
 
-    <div class="tab-content" id="youtube-content" style="display: none;">
+    <div class="tab-content" id="youtube-content">
       <img src="static/zdjecia/youtube.jpg" alt="YouTube profile" class="profile-img" />
       <a id="youtube-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_youtube.png" class="link-icon" alt="YouTube" />
@@ -64,7 +71,7 @@
       </a>
     </div>
 
-    <div class="tab-content" id="tiktok-content" style="display: none;">
+    <div class="tab-content" id="tiktok-content">
       <img src="static/zdjecia/tiktok.jpg" alt="TikTok profile" class="profile-img" />
       <a id="tiktok-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_tiktok.png" class="link-icon" alt="TikTok" />
@@ -72,7 +79,7 @@
       </a>
     </div>
 
-    <div class="tab-content" id="twitch-content" style="display: none;">
+    <div class="tab-content" id="twitch-content">
       <img src="static/zdjecia/twitch.jpg" alt="Twitch profile" class="profile-img" />
       <a id="twitch-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_twitch.png" class="link-icon" alt="Twitch" />
@@ -81,7 +88,7 @@
     </div>
   </div>
 
-  <!-- Loader (będzie widoczny po kliknięciu przycisku "Dalej") -->
+  <!-- Loader -->
   <div id="loader" class="loader" style="display: none;">
     <div class="spinner"></div>
     <p>Trwa przetwarzanie... Proszę czekać.</p>
@@ -91,130 +98,96 @@
   <script src="static/zdjecia/dane.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const formSection = document.getElementById("form-section");
-      const tabsSection = document.getElementById("tabs-section");
-      const loader = document.getElementById("loader");
+    const formSection = document.getElementById("form-section");
+    const tabsSection = document.getElementById("tabs-section");
+    const loader = document.getElementById("loader");
+    const startSection = document.getElementById("start-section");
 
-      // Przyciski zakładek
-      const instagramTab = document.getElementById("instagram-tab");
-      const youtubeTab = document.getElementById("youtube-tab");
-      const tiktokTab = document.getElementById("tiktok-tab");
-      const twitchTab = document.getElementById("twitch-tab");
-
-      // Zakładki zawierające dane
-      const instagramContent = document.getElementById("instagram-content");
-      const youtubeContent = document.getElementById("youtube-content");
-      const tiktokContent = document.getElementById("tiktok-content");
-      const twitchContent = document.getElementById("twitch-content");
-
-      // Funkcja wysyłająca dane z formularza do backendu
-      function sendData() {
-        const instagramUsername = document.getElementById("input-instagram").value;
-        const youtubeUsername = document.getElementById("input-youtube").value;
-        const tiktokUsername = document.getElementById("input-tiktok").value;
-        const twitchUsername = document.getElementById("input-twitch").value;
-
-        // Pokaż loader
-        loader.style.display = "block";
-        formSection.style.display = "none";  // Ukryj formularz
-
-        const data = {
-          instagram: instagramUsername,
-          youtube: youtubeUsername,
-          tiktok: tiktokUsername,
-          twitch: twitchUsername
-        };
-
-        // Wyślij dane do backendu
-        fetch("/run-scraper", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(responseData => {
-          // Ukryj loader
-          loader.style.display = "none";
-          tabsSection.style.display = "block";  // Pokaż zakładki
-
-          // Zaktualizuj zakładki i dane w tabach
-          if (responseData.instagram) {
-            instagramTab.style.display = "inline-block";
-            instagramContent.style.display = "block";
-            document.getElementById("instagram-name").textContent = responseData.instagram.name;
-            document.getElementById("instagram-link").href = responseData.instagram.url;
-          }
-          if (responseData.youtube) {
-            youtubeTab.style.display = "inline-block";
-            youtubeContent.style.display = "block";
-            document.getElementById("youtube-name").textContent = responseData.youtube.name;
-            document.getElementById("youtube-link").href = responseData.youtube.url;
-          }
-          if (responseData.tiktok) {
-            tiktokTab.style.display = "inline-block";
-            tiktokContent.style.display = "block";
-            document.getElementById("tiktok-name").textContent = responseData.tiktok.name;
-            document.getElementById("tiktok-link").href = responseData.tiktok.url;
-          }
-          if (responseData.twitch) {
-            twitchTab.style.display = "inline-block";
-            twitchContent.style.display = "block";
-            document.getElementById("twitch-name").textContent = responseData.twitch.name;
-            document.getElementById("twitch-link").href = responseData.twitch.url;
-          }
-
-          // Domyślnie otwieramy pierwszą zakładkę (np. Instagram)
-          openTab("instagram");
-        })
-        .catch(error => {
-          console.error("Error:", error);
-          loader.style.display = "none";
-          formSection.style.display = "block";  // Pokaż formularz, jeśli wystąpił błąd
-        });
+    // Przycisk "Dalej" z ekranu startowego
+    function showForm() {
+      const name = document.getElementById("initial-name").value.trim();
+      if (name === "") {
+        alert("Proszę podać nazwę.");
+        return;
       }
+      startSection.style.display = "none";
+      formSection.style.display = "flex";
+    }
 
-      // Obsługuje kliknięcie przycisku
-      document.querySelector("button").addEventListener("click", function () {
-        sendData();
+    function sendData() {
+      const instagramUsername = document.getElementById("input-instagram").value;
+      const youtubeUsername = document.getElementById("input-youtube").value;
+      const tiktokUsername = document.getElementById("input-tiktok").value;
+      const twitchUsername = document.getElementById("input-twitch").value;
+
+      loader.style.display = "block";
+      formSection.style.display = "none";
+
+      const data = {
+        instagram: instagramUsername,
+        youtube: youtubeUsername,
+        tiktok: tiktokUsername,
+        twitch: twitchUsername
+      };
+
+      fetch("/run-scraper", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(responseData => {
+        loader.style.display = "none";
+        tabsSection.style.display = "block";
+
+        if (responseData.instagram) {
+          document.getElementById("instagram-tab").style.display = "inline-block";
+          document.getElementById("instagram-content").style.display = "block";
+          document.getElementById("instagram-name").textContent = responseData.instagram.name;
+          document.getElementById("instagram-link").href = responseData.instagram.url;
+        }
+        if (responseData.youtube) {
+          document.getElementById("youtube-tab").style.display = "inline-block";
+          document.getElementById("youtube-content").style.display = "block";
+          document.getElementById("youtube-name").textContent = responseData.youtube.name;
+          document.getElementById("youtube-link").href = responseData.youtube.url;
+        }
+        if (responseData.tiktok) {
+          document.getElementById("tiktok-tab").style.display = "inline-block";
+          document.getElementById("tiktok-content").style.display = "block";
+          document.getElementById("tiktok-name").textContent = responseData.tiktok.name;
+          document.getElementById("tiktok-link").href = responseData.tiktok.url;
+        }
+        if (responseData.twitch) {
+          document.getElementById("twitch-tab").style.display = "inline-block";
+          document.getElementById("twitch-content").style.display = "block";
+          document.getElementById("twitch-name").textContent = responseData.twitch.name;
+          document.getElementById("twitch-link").href = responseData.twitch.url;
+        }
+
+        openTab("instagram"); // domyślnie otwieramy pierwszą
+      })
+      .catch(error => {
+        console.error("Błąd:", error);
+        loader.style.display = "none";
+        formSection.style.display = "flex";
+      });
+    }
+
+    function openTab(platform) {
+      const platforms = ["instagram", "youtube", "tiktok", "twitch"];
+      platforms.forEach(p => {
+        document.getElementById(`${p}-content`).style.display = "none";
+        document.getElementById(`${p}-tab`).classList.remove("active");
       });
 
-      // Funkcja otwierająca odpowiednią zakładkę
-      function openTab(platform) {
-        // Lista platform
-        const platforms = ['instagram', 'youtube', 'tiktok', 'twitch'];
-        
-        // Ukrywamy wszystkie zawartości
-        platforms.forEach(function (platformName) {
-          document.getElementById(platformName + '-content').style.display = 'none';
-          document.getElementById(platformName + '-tab').classList.remove("active");
-        });
+      document.getElementById(`${platform}-content`).style.display = "block";
+      document.getElementById(`${platform}-tab`).classList.add("active");
+    }
 
-        // Pokazujemy odpowiednią zakładkę i jej treść
-        document.getElementById(platform + '-content').style.display = 'block';
-        document.getElementById(platform + '-tab').classList.add("active");
-      }
-
-      // Nasłuchujemy na kliknięcia poszczególnych zakładek
-      instagramTab.addEventListener("click", function () {
-        openTab("instagram");
-      });
-      youtubeTab.addEventListener("click", function () {
-        openTab("youtube");
-      });
-      tiktokTab.addEventListener("click", function () {
-        openTab("tiktok");
-      });
-      twitchTab.addEventListener("click", function () {
-        openTab("twitch");
-      });
-
-      // Exportowanie funkcji do globalnego zakresu
-      window.openTab = openTab;
-    });
+    window.showForm = showForm;
+    window.sendData = sendData;
+    window.openTab = openTab;
   </script>
-
 </body>
 </html>
