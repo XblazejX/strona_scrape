@@ -16,14 +16,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const tiktokContent = document.getElementById("tiktok-content");
   const twitchContent = document.getElementById("twitch-content");
 
+  let baseFolder = ""; // nazwa folderu ustawiona w showForm
+
   // === NOWA FUNKCJA: przejście z ekranu startowego do formularza ===
   window.showForm = function () {
-    const nameInput = document.getElementById("initial-name").value;
-    if (nameInput.trim() === "") {
+    baseFolder = document.getElementById("initial-name").value.trim();
+    if (!baseFolder) {
       alert("Proszę podać nazwę.");
       return;
     }
-
     startSection.style.display = "none";
     formSection.style.display = "block";
   };
@@ -40,6 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
     formSection.style.display = "none";
 
     const data = {
+      folder: baseFolder,
       instagram: instagramUsername,
       youtube: youtubeUsername,
       tiktok: tiktokUsername,
@@ -54,33 +56,37 @@ document.addEventListener("DOMContentLoaded", function () {
       body: JSON.stringify(data)
     })
     .then(response => response.json())
-    .then(responseData => {
+    .then(profileData => {
       loader.style.display = "none";
       tabsSection.style.display = "block";
 
-      if (responseData.instagram) {
+      if (profileData.instagram) {
         instagramTab.style.display = "inline-block";
         instagramContent.style.display = "block";
-        document.getElementById("instagram-name").textContent = responseData.instagram.name;
-        document.getElementById("instagram-link").href = responseData.instagram.url;
+        document.getElementById("instagram-name").textContent = profileData.instagram.name;
+        document.getElementById("instagram-link").href = profileData.instagram.url;
+        instagramContent.querySelector('.profile-img').src = `/static/${baseFolder}/instagram.jpg`;
       }
-      if (responseData.youtube) {
+      if (profileData.youtube) {
         youtubeTab.style.display = "inline-block";
         youtubeContent.style.display = "block";
-        document.getElementById("youtube-name").textContent = responseData.youtube.name;
-        document.getElementById("youtube-link").href = responseData.youtube.url;
+        document.getElementById("youtube-name").textContent = profileData.youtube.name;
+        document.getElementById("youtube-link").href = profileData.youtube.url;
+        youtubeContent.querySelector('.profile-img').src = `/static/${baseFolder}/youtube.jpg`;
       }
-      if (responseData.tiktok) {
+      if (profileData.tiktok) {
         tiktokTab.style.display = "inline-block";
         tiktokContent.style.display = "block";
-        document.getElementById("tiktok-name").textContent = responseData.tiktok.name;
-        document.getElementById("tiktok-link").href = responseData.tiktok.url;
+        document.getElementById("tiktok-name").textContent = profileData.tiktok.name;
+        document.getElementById("tiktok-link").href = profileData.tiktok.url;
+        tiktokContent.querySelector('.profile-img').src = `/static/${baseFolder}/tiktok.jpg`;
       }
-      if (responseData.twitch) {
+      if (profileData.twitch) {
         twitchTab.style.display = "inline-block";
         twitchContent.style.display = "block";
-        document.getElementById("twitch-name").textContent = responseData.twitch.name;
-        document.getElementById("twitch-link").href = responseData.twitch.url;
+        document.getElementById("twitch-name").textContent = profileData.twitch.name;
+        document.getElementById("twitch-link").href = profileData.twitch.url;
+        twitchContent.querySelector('.profile-img').src = `/static/${baseFolder}/twitch.jpg`;
       }
 
       openTab("instagram");
@@ -94,28 +100,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Funkcja otwierająca odpowiednią zakładkę
   window.openTab = function (platform) {
-    const platforms = ['instagram', 'youtube', 'tiktok', 'twitch'];
-
-    platforms.forEach(function (platformName) {
-      document.getElementById(platformName + '-content').style.display = 'none';
-      document.getElementById(platformName + '-tab').classList.remove("active");
+    [
+      'instagram',
+      'youtube',
+      'tiktok',
+      'twitch'
+    ].forEach(platformName => {
+      document.getElementById(`${platformName}-content`).style.display = 'none';
+      document.getElementById(`${platformName}-tab`).classList.remove('active');
     });
 
-    document.getElementById(platform + '-content').style.display = 'block';
-    document.getElementById(platform + '-tab').classList.add("active");
+    document.getElementById(`${platform}-content`).style.display = 'block';
+    document.getElementById(`${platform}-tab`).classList.add('active');
   };
 
   // Nasłuchiwanie kliknięć zakładek
-  instagramTab.addEventListener("click", function () {
-    openTab("instagram");
-  });
-  youtubeTab.addEventListener("click", function () {
-    openTab("youtube");
-  });
-  tiktokTab.addEventListener("click", function () {
-    openTab("tiktok");
-  });
-  twitchTab.addEventListener("click", function () {
-    openTab("twitch");
-  });
+  instagramTab.addEventListener('click', () => openTab('instagram'));
+  youtubeTab.addEventListener('click', () => openTab('youtube'));
+  tiktokTab.addEventListener('click', () => openTab('tiktok'));
+  twitchTab.addEventListener('click', () => openTab('twitch'));
 });

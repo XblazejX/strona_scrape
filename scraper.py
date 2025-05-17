@@ -10,36 +10,30 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-# ==========================
-# 💡 KONFIGURACJA
-OUTPUT_FOLDER = "static/zdjecia"  # Folder, do którego będą zapisywane zdjęcia
-profile_data = {}  # Zmienna na dane profilowe
+# Usuń stałą OUTPUT_FOLDER tutaj – ustawimy ją w run_scraper
+profile_data = {}
 
-def ensure_output_folder():
-    """Tworzy folder, jeśli nie istnieje."""
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+def ensure_output_folder(path):
+    os.makedirs(path, exist_ok=True)
 
-def download_image(url, filename):
-    """Pobiera obrazek z URL i zapisuje go do pliku."""
+def download_image(url, folder, filename):
     try:
         r = requests.get(url)
         r.raise_for_status()
-        with open(os.path.join(OUTPUT_FOLDER, filename), "wb") as f:
+        with open(os.path.join(folder, filename), "wb") as f:
             f.write(r.content)
         print(f"✅ Zapisano: {filename}")
     except Exception as e:
         print(f"❌ Błąd pobierania zdjęcia: {e}")
 
 def get_chrome_driver():
-    """Inicjalizuje sterownik Selenium za pomocą automatycznie pobranego ChromeDrivera."""
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--disable-blink-features=AutomationControlled")
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
-def instagram_pfp(username):
-    """Pobiera zdjęcie profilowe z Instagrama przy użyciu Instaloadera."""
+def instagram_pfp(username, folder):
     print(f"\n📸 Instagram: {username}")
     try:
         loader = instaloader.Instaloader(
@@ -51,16 +45,15 @@ def instagram_pfp(username):
             compress_json=False
         )
         profile = instaloader.Profile.from_username(loader.context, username)
-        download_image(profile.profile_pic_url, "instagram.jpg")
+        download_image(profile.profile_pic_url, folder, "instagram.jpg")
         profile_data["instagram"] = {
             "url": f"https://instagram.com/{username}",
-            "name": f"{username}"
+            "name": username
         }
     except Exception as e:
         print(f"❌ Instagram error: {e}")
 
-def tiktok_pfp(username, driver):
-    """Pobiera zdjęcie profilowe z TikToka przy użyciu Selenium."""
+def tiktok_pfp(username, folder, driver):
     print(f"\n🎵 TikTok: {username}")
     try:
         driver.get(f"https://www.tiktok.com/@{username}")
@@ -70,55 +63,51 @@ def tiktok_pfp(username, driver):
         if start != -1:
             start += len('"avatarLarger":"')
             end = html.find('"', start)
-            avatar_url = html[start:end]
-            avatar_url = avatar_url.replace("\\u002F", "/").replace("\\u0026", "&")
+            avatar_url = html[start:end].replace("\\u002F", "/").replace("\\u0026", "&")
             if "http" in avatar_url:
-                download_image(avatar_url, "tiktok.jpg")
+                download_image(avatar_url, folder, "tiktok.jpg")
                 profile_data["tiktok"] = {
                     "url": f"https://www.tiktok.com/@{username}",
-                    "name": f"{username}"
+                    "name": username
                 }
-            else:
-                print("❌ TikTok: Nie znaleziono prawidłowego URL zdjęcia.")
         else:
-            print("❌ TikTok: Avatar nie został znaleziony w kodzie strony.")
+            print("❌ TikTok: Avatar nie został znaleziony.")
     except Exception as e:
         print(f"❌ TikTok error: {e}")
 
-def twitch_pfp(username, driver):
-    """Pobiera zdjęcie profilowe z Twitcha przy użyciu Selenium i XPath."""
+def twitch_pfp(username, folder, driver):
     print(f"\n🎮 Twitch: {username}")
     try:
         driver.get(f"https://www.twitch.tv/{username}")
         time.sleep(5)
-        # XPath z Twojego zapytania
         img_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.XPATH, "//*[@id='offline-channel-main-content']/div[2]/div[1]/div[1]/div[1]/div/div/div[2]/a/div/div/img"))
+            EC.presence_of_element_located((By.XPATH,
+              "//*[@id='offline-channel-main-content']/div[2]/div[1]/div[1]/div[1]/div/div/div[2]/a/div/div/img"))
         )
         img_url = img_element.get_attribute("src")
         if img_url:
-            download_image(img_url, "twitch.jpg")
+            download_image(img_url, folder, "twitch.jpg")
             profile_data["twitch"] = {
                 "url": f"https://www.twitch.tv/{username}",
-                "name": f"{username}"
+                "name": username
             }
-        else:
-            print("❌ Twitch: Nie znaleziono zdjęcia profilowego.")
     except Exception as e:
         print(f"❌ Twitch error: {e}")
 
-def run_scraper(instagram, tiktok, twitch):
-    """Uruchamia proces zbierania danych i zwraca je do aplikacji webowej."""
-    ensure_output_folder()
+def run_scraper(instagram, tiktok, twitch, folder):
+    """Teraz przyjmujemy dodatkowo `folder`."""
+    global profile_data
+    profile_data = {}
+    OUTPUT_FOLDER = os.path.join("static", folder)
+    ensure_output_folder(OUTPUT_FOLDER)
     driver = get_chrome_driver()
 
     if instagram:
-        instagram_pfp(instagram)
+        instagram_pfp(instagram, OUTPUT_FOLDER)
     if tiktok:
-        tiktok_pfp(tiktok, driver)
+        tiktok_pfp(tiktok, OUTPUT_FOLDER, driver)
     if twitch:
-        twitch_pfp(twitch, driver)
+        twitch_pfp(twitch, OUTPUT_FOLDER, driver)
 
     driver.quit()
-
     return profile_data
