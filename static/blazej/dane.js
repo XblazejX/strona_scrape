@@ -1,4 +1,4 @@
-const profileData = {
+window.profileData = {
   "instagram": {
     "url": "https://instagram.com/graf_irl",
     "name": "graf_irl"

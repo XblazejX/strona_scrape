@@ -9,11 +9,12 @@
 <body>
 
   <!-- Ekran początkowy -->
-  <div id="start-section">
-    <h1>Witaj! Podaj swoją nazwę</h1>
-    <input id="initial-name" placeholder="Twoja nazwa" />
-    <button onclick="showForm()">Dalej</button>
-  </div>
+  <div id="start-section" style="display: block; text-align: center; margin-top: 100px;">
+  <h1>Witaj! Podaj swoją nazwę</h1>
+  <input id="initial-name" placeholder="Twoja nazwa" style="padding: 10px; font-size: 16px; width: 250px; max-width: 90%; margin-right: 10px;" />
+  <button onclick="showForm()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Dalej</button>
+</div>
+
 
   <!-- Formularz wprowadzania danych -->
   <div id="form-section" style="display: none;">
@@ -56,7 +57,7 @@
 
     <!-- Zawartość zakładek -->
     <div class="tab-content" id="instagram-content">
-      <img src="static/zdjecia/instagram.jpg" alt="Instagram profile" class="profile-img" />
+      <img src="" alt="Instagram profile" class="profile-img" />
       <a id="instagram-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_instagram.png" class="link-icon" alt="Instagram" />
         <span id="instagram-name"></span>
@@ -64,7 +65,7 @@
     </div>
 
     <div class="tab-content" id="youtube-content">
-      <img src="static/zdjecia/youtube.jpg" alt="YouTube profile" class="profile-img" />
+      <img src="" alt="YouTube profile" class="profile-img" />
       <a id="youtube-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_youtube.png" class="link-icon" alt="YouTube" />
         <span id="youtube-name"></span>
@@ -72,7 +73,7 @@
     </div>
 
     <div class="tab-content" id="tiktok-content">
-      <img src="static/zdjecia/tiktok.jpg" alt="TikTok profile" class="profile-img" />
+      <img src="" alt="TikTok profile" class="profile-img" />
       <a id="tiktok-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_tiktok.png" class="link-icon" alt="TikTok" />
         <span id="tiktok-name"></span>
@@ -80,7 +81,7 @@
     </div>
 
     <div class="tab-content" id="twitch-content">
-      <img src="static/zdjecia/twitch.jpg" alt="Twitch profile" class="profile-img" />
+      <img src="" alt="Twitch profile" class="profile-img" />
       <a id="twitch-link" class="profile-link" target="_blank">
         <img src="static/icons/logo_twitch.png" class="link-icon" alt="Twitch" />
         <span id="twitch-name"></span>
@@ -94,100 +95,30 @@
     <p>Trwa przetwarzanie... Proszę czekać.</p>
   </div>
 
+  <!-- Wczytujemy tylko main.js -->
   <script src="static/main.js"></script>
-  <script src="static/zdjecia/dane.js"></script>
-
   <script>
-    const formSection = document.getElementById("form-section");
-    const tabsSection = document.getElementById("tabs-section");
-    const loader = document.getElementById("loader");
-    const startSection = document.getElementById("start-section");
+    // Po wpisaniu nazwy dynamicznie doklejamy dane.js z odpowiedniego folderu
+    function injectDataJs(folder) {
+      const existing = document.getElementById('dane-js');
+      if (existing) existing.remove();
 
-    // Przycisk "Dalej" z ekranu startowego
-    function showForm() {
-      const name = document.getElementById("initial-name").value.trim();
-      if (name === "") {
-        alert("Proszę podać nazwę.");
-        return;
-      }
-      startSection.style.display = "none";
-      formSection.style.display = "flex";
+      const script = document.createElement('script');
+      script.id = 'dane-js';
+      script.src = `/static/${folder}/dane.js`;
+      document.head.appendChild(script);
     }
 
-    function sendData() {
-      const instagramUsername = document.getElementById("input-instagram").value;
-      const youtubeUsername = document.getElementById("input-youtube").value;
-      const tiktokUsername = document.getElementById("input-tiktok").value;
-      const twitchUsername = document.getElementById("input-twitch").value;
-
-      loader.style.display = "block";
-      formSection.style.display = "none";
-
-      const data = {
-        instagram: instagramUsername,
-        youtube: youtubeUsername,
-        tiktok: tiktokUsername,
-        twitch: twitchUsername
-      };
-
-      fetch("/run-scraper", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-      .then(response => response.json())
-      .then(responseData => {
-        loader.style.display = "none";
-        tabsSection.style.display = "block";
-
-        if (responseData.instagram) {
-          document.getElementById("instagram-tab").style.display = "inline-block";
-          document.getElementById("instagram-content").style.display = "block";
-          document.getElementById("instagram-name").textContent = responseData.instagram.name;
-          document.getElementById("instagram-link").href = responseData.instagram.url;
-        }
-        if (responseData.youtube) {
-          document.getElementById("youtube-tab").style.display = "inline-block";
-          document.getElementById("youtube-content").style.display = "block";
-          document.getElementById("youtube-name").textContent = responseData.youtube.name;
-          document.getElementById("youtube-link").href = responseData.youtube.url;
-        }
-        if (responseData.tiktok) {
-          document.getElementById("tiktok-tab").style.display = "inline-block";
-          document.getElementById("tiktok-content").style.display = "block";
-          document.getElementById("tiktok-name").textContent = responseData.tiktok.name;
-          document.getElementById("tiktok-link").href = responseData.tiktok.url;
-        }
-        if (responseData.twitch) {
-          document.getElementById("twitch-tab").style.display = "inline-block";
-          document.getElementById("twitch-content").style.display = "block";
-          document.getElementById("twitch-name").textContent = responseData.twitch.name;
-          document.getElementById("twitch-link").href = responseData.twitch.url;
-        }
-
-        openTab("instagram"); // domyślnie otwieramy pierwszą
-      })
-      .catch(error => {
-        console.error("Błąd:", error);
-        loader.style.display = "none";
-        formSection.style.display = "flex";
-      });
-    }
-
-    function openTab(platform) {
-      const platforms = ["instagram", "youtube", "tiktok", "twitch"];
-      platforms.forEach(p => {
-        document.getElementById(`${p}-content`).style.display = "none";
-        document.getElementById(`${p}-tab`).classList.remove("active");
-      });
-
-      document.getElementById(`${platform}-content`).style.display = "block";
-      document.getElementById(`${platform}-tab`).classList.add("active");
-    }
-
-    window.showForm = showForm;
-    window.sendData = sendData;
-    window.openTab = openTab;
+    // Nadpisujemy showForm, żeby wstrzyknąć dane.js przed wywołaniem właściwego showForm
+    const originalShowForm = window.showForm;
+    window.showForm = function() {
+      const folder = document.getElementById("initial-name").value.trim();
+      if (!folder) return originalShowForm();
+      injectDataJs(folder);
+      // Mały timeout, żeby dać time na załadowanie dane.js
+      setTimeout(originalShowForm, 100);
+    };
   </script>
+
 </body>
 </html>
