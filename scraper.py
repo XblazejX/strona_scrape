@@ -28,6 +28,7 @@ def download_image(url, folder, filename):
 
 def get_chrome_driver():
     options = Options()
+    options.binary_location = "/usr/bin/google-chrome"  # Wymuszamy ścieżkę do Chrome
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -38,6 +39,7 @@ def get_chrome_driver():
 
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
+
 
 def instagram_pfp(username, folder):
     print(f"\n📸 Instagram: {username}")
