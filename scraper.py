@@ -1,10 +1,6 @@
 import os
-import time
 import requests
-import instaloader
 import re
-import platform
-from subprocess import check_output, CalledProcessError
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -12,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+import instaloader
 
 profile_data = {}
 
@@ -28,30 +25,10 @@ def download_image(url, folder, filename):
     except Exception as e:
         print(f"❌ Błąd pobierania zdjęcia: {e}")
 
-def get_chrome_version_windows():
-    # Wyciągnij wersję Chrome na Windows przez PowerShell
-    try:
-        version = check_output(
-            ['powershell', '-Command',
-             '(Get-Item "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe").VersionInfo.ProductVersion']
-        ).decode("utf-8").strip()
-        return version
-    except (CalledProcessError, FileNotFoundError):
-        # Spróbuj 32-bitową wersję
-        try:
-            version = check_output(
-                ['powershell', '-Command',
-                 '(Get-Item "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe").VersionInfo.ProductVersion']
-            ).decode("utf-8").strip()
-            return version
-        except Exception as e:
-            print(f"❌ Nie udało się odczytać wersji Chrome: {e}")
-            return None
-
 def get_chrome_driver():
     options = Options()
-    options.binary_location = "/usr/bin/google-chrome"  # Wymuszamy ścieżkę do Chrome
-    options.add_argument("--headless=new")
+    # Usuń wymuszanie ścieżki — webdriver_manager i Chrome domyślnie powinny znaleźć przeglądarkę
+    options.add_argument("--headless=new")  # tryb headless
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -59,19 +36,9 @@ def get_chrome_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--remote-debugging-port=9222")
 
-    # Pobierz pełną wersję Chrome
-    version_output = check_output(["google-chrome", "--version"]).decode("utf-8")
-    # Przykładowy output: 'Google Chrome 136.0.7103.104'
-    match = re.search(r"(\d+)\.(\d+)", version_output)
-    if not match:
-        raise Exception("Nie udało się odczytać wersji Chrome")
-
-    major_version = match.group(1)  # np. "136"
-    minor_version = match.group(2)  # np. "0"
-    driver_version = f"{major_version}.{minor_version}"  # np. "136.0"
-
-    service = Service(ChromeDriverManager(version=driver_version).install())
-    return webdriver.Chrome(service=service, options=options)
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
+    return driver
 
 def instagram_pfp(username, folder):
     print(f"\n📸 Instagram: {username}")
@@ -97,7 +64,12 @@ def tiktok_pfp(username, folder, driver):
     print(f"\n🎵 TikTok: {username}")
     try:
         driver.get(f"https://www.tiktok.com/@{username}")
-        time.sleep(5)
+
+        # Poczekaj aż avatar będzie w HTML (max 15 sekund)
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, "//img[contains(@src,'avatar')]"))
+        )
+
         html = driver.page_source
         start = html.find('"avatarLarger":"')
         if start != -1:
@@ -119,10 +91,13 @@ def twitch_pfp(username, folder, driver):
     print(f"\n🎮 Twitch: {username}")
     try:
         driver.get(f"https://www.twitch.tv/{username}")
-        time.sleep(5)
+
+        # Poczekaj na obrazek awatara (max 20 sekund)
         img_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.XPATH,
-              "//*[@id='offline-channel-main-content']/div[2]/div[1]/div[1]/div[1]/div/div/div[2]/a/div/div/img"))
+            EC.presence_of_element_located((
+                By.XPATH,
+                "//img[contains(@src,'profile_image') or contains(@class,'channel-info__user-avatar')]"
+            ))
         )
         img_url = img_element.get_attribute("src")
         if img_url:
