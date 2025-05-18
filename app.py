@@ -39,20 +39,28 @@ def run_scraper_route():
     tiktok    = data.get('tiktok')
     twitch    = data.get('twitch')
 
-    # Uruchom scraper i zbierz dane
-    profile_data = run_scraper(instagram, tiktok, twitch, folder)
-
     # Upewnij się, że folder istnieje
     output_dir = os.path.join('static', folder)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Zapisz plik dane.js do katalogu static/{folder}/dane.js
+    # Usuń stare zdjęcia i dane.js PRZED uruchomieniem scrapera
+    for platform in ['instagram', 'youtube', 'tiktok', 'twitch']:
+        img_path = os.path.join(output_dir, f"{platform}.jpg")
+        if os.path.exists(img_path):
+            os.remove(img_path)
+
     js_path = os.path.join(output_dir, 'dane.js')
+    if os.path.exists(js_path):
+        os.remove(js_path)
+
+    # Uruchom scraper i zapisz nowe dane + zdjęcia
+    profile_data = run_scraper(instagram, tiktok, twitch, folder)
+
+    # Zapisz dane.js
     with open(js_path, 'w', encoding='utf-8') as f:
         f.write('window.profileData = ')
         json.dump(profile_data, f, ensure_ascii=False, indent=2)
         f.write(';')
-
 
     return jsonify(profile_data)
 
