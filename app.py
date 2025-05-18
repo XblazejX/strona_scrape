@@ -2,8 +2,22 @@ from flask import Flask, render_template, request, jsonify
 import os
 import json
 from scraper import run_scraper
+import shutil
 
 app = Flask(__name__)
+
+@app.route('/delete-folder', methods=['POST'])
+def delete_folder():
+    data = request.get_json()
+    folder = data.get('folder', '').strip()
+    path = os.path.join('static', folder)
+
+    if os.path.isdir(path):
+        import shutil
+        shutil.rmtree(path)
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'Folder not found'}), 404
 
 @app.route('/')
 def index():

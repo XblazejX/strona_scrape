@@ -18,6 +18,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let baseFolder = "";
 
+  const deleteFolderButton = document.getElementById("delete-folder-button");
+
+  deleteFolderButton.addEventListener("click", () => {
+    if (!baseFolder) return;
+
+    if (!confirm("Czy na pewno chcesz usunąć folder i wszystkie dane?")) return;
+
+    fetch("/delete-folder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folder: baseFolder })
+    })
+    .then(res => res.json())
+    .then(response => {
+      if (response.success) {
+        tabsSection.style.display = "none";
+        startSection.style.display = "block";
+        baseFolder = "";
+      } else {
+        alert("Nie udało się usunąć folderu.");
+      }
+    })
+    .catch(err => {
+      console.error("Błąd podczas usuwania folderu:", err);
+      alert("Wystąpił błąd podczas usuwania folderu.");
+    });
+  });
+
+
+
   backButton.addEventListener("click", () => {
     tabsSection.style.display = "none";
     formSection.style.display = "flex";

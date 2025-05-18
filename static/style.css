@@ -246,3 +246,15 @@ body {
 .floating-btn:hover {
   background-color: #0056b3;
 }
+
+#delete-folder-button {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background-color: #e74c3c;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
