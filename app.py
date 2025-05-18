@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 import os
 import json
-from scraper import run_scraper
 import shutil
+from scraper import run_scraper
 
 app = Flask(__name__)
 
@@ -13,10 +13,11 @@ def delete_folder():
     path = os.path.join('static', folder)
 
     if os.path.isdir(path):
-        import shutil
         shutil.rmtree(path)
+        print(f"[DEBUG] Usunięto folder: {path}")
         return jsonify({'success': True})
     else:
+        print(f"[DEBUG] Nie znaleziono folderu do usunięcia: {path}")
         return jsonify({'success': False, 'error': 'Folder not found'}), 404
 
 @app.route('/')
@@ -42,7 +43,7 @@ def check_folder():
         for plat, fname in mapping.items():
             if fname in files:
                 available.append(plat)
-
+    print(f"[DEBUG] Folder '{folder}' istnieje: {exists}, dostępne platformy: {available}")
     return jsonify({'exists': exists, 'available': available})
 
 @app.route('/run-scraper', methods=['POST'])
@@ -53,21 +54,23 @@ def run_scraper_route():
     tiktok    = data.get('tiktok')
     twitch    = data.get('twitch')
 
-    # Upewnij się, że folder istnieje
     output_dir = os.path.join('static', folder)
     os.makedirs(output_dir, exist_ok=True)
+    print(f"[DEBUG] Tworzenie / czyszczenie folderu: {output_dir}")
 
-    # Usuń stare zdjęcia i dane.js PRZED uruchomieniem scrapera
+    # Usuń stare pliki zdjęć i dane.js
     for platform in ['instagram', 'youtube', 'tiktok', 'twitch']:
         img_path = os.path.join(output_dir, f"{platform}.jpg")
         if os.path.exists(img_path):
             os.remove(img_path)
+            print(f"[DEBUG] Usunięto stary plik: {img_path}")
 
     js_path = os.path.join(output_dir, 'dane.js')
     if os.path.exists(js_path):
         os.remove(js_path)
+        print(f"[DEBUG] Usunięto stary plik: {js_path}")
 
-    # Uruchom scraper i zapisz nowe dane + zdjęcia
+    # Uruchom scraper
     profile_data = run_scraper(instagram, tiktok, twitch, folder)
 
     # Zapisz dane.js
@@ -75,8 +78,10 @@ def run_scraper_route():
         f.write('window.profileData = ')
         json.dump(profile_data, f, ensure_ascii=False, indent=2)
         f.write(';')
+    print(f"[DEBUG] Zapisano dane.js w: {js_path}")
+    print(f"[DEBUG] Zawartość folderu po scrapingu: {os.listdir(output_dir)}")
 
     return jsonify(profile_data)
 
 if __name__ == '__main__':
-    app.run(host="::",debug=True)
+    app.run(host="::", port=5000, debug=True, use_reloader=True)
