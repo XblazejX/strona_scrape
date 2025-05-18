@@ -3,6 +3,7 @@ import os
 import json
 import shutil
 from scraper import run_scraper
+import shutil
 
 app = Flask(__name__)
 
@@ -13,11 +14,10 @@ def delete_folder():
     path = os.path.join('static', folder)
 
     if os.path.isdir(path):
+        import shutil
         shutil.rmtree(path)
-        print(f"[DEBUG] Usunięto folder: {path}")
         return jsonify({'success': True})
     else:
-        print(f"[DEBUG] Nie znaleziono folderu do usunięcia: {path}")
         return jsonify({'success': False, 'error': 'Folder not found'}), 404
 
 @app.route('/')
