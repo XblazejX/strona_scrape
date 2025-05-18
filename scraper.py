@@ -50,6 +50,7 @@ def get_chrome_version_windows():
 
 def get_chrome_driver():
     options = Options()
+    options.binary_location = "/usr/bin/google-chrome"  # Wymuszamy ścieżkę do Chrome
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -58,29 +59,19 @@ def get_chrome_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--remote-debugging-port=9222")
 
-    system = platform.system()
-    if system == "Windows":
-        chrome_version = get_chrome_version_windows()
-        if not chrome_version:
-            raise Exception("Nie udało się odczytać wersji Chrome na Windows")
-        driver_version = chrome_version  # pełna wersja, np. 136.0.7103.114
-    else:
-        # Domyślne podejście dla Linux/macOS
-        try:
-            version_output = check_output(["google-chrome", "--version"]).decode("utf-8")
-            match = re.search(r"(\d+\.\d+\.\d+\.\d+)", version_output)
-            if not match:
-                raise Exception("Nie udało się odczytać wersji Chrome")
-            driver_version = match.group(1)
-        except Exception as e:
-            print(f"❌ Błąd przy pobieraniu wersji Chrome: {e}")
-            driver_version = None
+    # Pobierz pełną wersję Chrome
+    version_output = check_output(["google-chrome", "--version"]).decode("utf-8")
+    # Przykładowy output: 'Google Chrome 136.0.7103.104'
+    match = re.search(r"(\d+)\.(\d+)", version_output)
+    if not match:
+        raise Exception("Nie udało się odczytać wersji Chrome")
 
-    print(f"🔎 Wersja Chrome do chromedriver: {driver_version}")
+    major_version = match.group(1)  # np. "136"
+    minor_version = match.group(2)  # np. "0"
+    driver_version = f"{major_version}.{minor_version}"  # np. "136.0"
 
     service = Service(ChromeDriverManager(version=driver_version).install())
     return webdriver.Chrome(service=service, options=options)
-
 
 def instagram_pfp(username, folder):
     print(f"\n📸 Instagram: {username}")
