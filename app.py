@@ -79,4 +79,4 @@ def run_scraper_route():
     return jsonify(profile_data)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="::",debug=True)
