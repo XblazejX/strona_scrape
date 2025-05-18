@@ -29,7 +29,13 @@ def download_image(url, folder, filename):
 def get_chrome_driver():
     options = Options()
     options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-software-rasterizer")
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--remote-debugging-port=9222")
+
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
@@ -95,7 +101,6 @@ def twitch_pfp(username, folder, driver):
         print(f"❌ Twitch error: {e}")
 
 def run_scraper(instagram, tiktok, twitch, folder):
-    """Teraz przyjmujemy dodatkowo `folder`."""
     global profile_data
     profile_data = {}
     OUTPUT_FOLDER = os.path.join("static", folder)
