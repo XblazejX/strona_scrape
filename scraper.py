@@ -10,7 +10,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Usuń stałą OUTPUT_FOLDER tutaj – ustawimy ją w run_scraper
 profile_data = {}
 
 def ensure_output_folder(path):
@@ -57,7 +56,7 @@ def tiktok_pfp(username, folder, driver):
     print(f"\n🎵 TikTok: {username}")
     try:
         driver.get(f"https://www.tiktok.com/@{username}")
-        time.sleep(5)
+        time.sleep(5)  # Możesz tu zostawić, TikTok jest dynamiczny
         html = driver.page_source
         start = html.find('"avatarLarger":"')
         if start != -1:
@@ -79,11 +78,22 @@ def twitch_pfp(username, folder, driver):
     print(f"\n🎮 Twitch: {username}")
     try:
         driver.get(f"https://www.twitch.tv/{username}")
-        time.sleep(5)
-        img_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.XPATH,
-              "//*[@id='offline-channel-main-content']/div[2]/div[1]/div[1]/div[1]/div/div/div[2]/a/div/div/img"))
-        )
+
+        # Najpierw spróbuj awatar na kanale online
+        try:
+            img_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH,
+                    "//*[@id='live-channel-stream-information']/div/div/div[2]/div[1]/div/div/div[2]/a/div/div[1]/img"
+                ))
+            )
+        except:
+            # Jeśli nie ma online, spróbuj offline
+            img_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH,
+                    "//*[@id='offline-channel-main-content']/div[2]/div[1]/div[1]/div[1]/div/div/div[2]/a/div/div/img"
+                ))
+            )
+
         img_url = img_element.get_attribute("src")
         if img_url:
             download_image(img_url, folder, "twitch.jpg")
@@ -95,7 +105,6 @@ def twitch_pfp(username, folder, driver):
         print(f"❌ Twitch error: {e}")
 
 def run_scraper(instagram, tiktok, twitch, folder):
-    """Teraz przyjmujemy dodatkowo `folder`."""
     global profile_data
     profile_data = {}
     OUTPUT_FOLDER = os.path.join("static", folder)
