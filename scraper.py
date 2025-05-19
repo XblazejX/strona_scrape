@@ -36,7 +36,8 @@ def get_chrome_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--remote-debugging-port=9222")
 
-    service = Service(ChromeDriverManager().install())
+    service = Service("/root/strona_scrape/chrome-136/chromedriver")
+
     driver = webdriver.Chrome(service=service, options=options)
     return driver
 
