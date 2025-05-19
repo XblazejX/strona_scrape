@@ -27,8 +27,8 @@ def download_image(url, folder, filename):
 
 def get_chrome_driver():
     options = Options()
-    # Usuń wymuszanie ścieżki — webdriver_manager i Chrome domyślnie powinny znaleźć przeglądarkę
-    options.add_argument("--headless=new")  # tryb headless
+    # Usunąłem wymuszanie ścieżki — webdriver_manager i Chrome domyślnie powinny znaleźć przeglądarkę
+    options.add_argument("--headless=new")  # tryb headless, nowy sposób
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
