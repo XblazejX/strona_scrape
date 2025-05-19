@@ -27,8 +27,7 @@ def download_image(url, folder, filename):
 
 def get_chrome_driver():
     options = Options()
-    # Usunąłem wymuszanie ścieżki — webdriver_manager i Chrome domyślnie powinny znaleźć przeglądarkę
-    options.add_argument("--headless=new")  # tryb headless, nowy sposób
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -37,7 +36,6 @@ def get_chrome_driver():
     options.add_argument("--remote-debugging-port=9222")
 
     service = Service("/root/strona_scrape/chrome-136/chromedriver")
-
     driver = webdriver.Chrome(service=service, options=options)
     return driver
 
@@ -66,7 +64,6 @@ def tiktok_pfp(username, folder, driver):
     try:
         driver.get(f"https://www.tiktok.com/@{username}")
 
-        # Poczekaj aż avatar będzie w HTML (max 15 sekund)
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.XPATH, "//img[contains(@src,'avatar')]"))
         )
@@ -93,14 +90,31 @@ def twitch_pfp(username, folder, driver):
     try:
         driver.get(f"https://www.twitch.tv/{username}")
 
-        # Poczekaj na obrazek awatara (max 20 sekund)
-        img_element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((
-                By.XPATH,
-                "//img[contains(@src,'profile_image') or contains(@class,'channel-info__user-avatar')]"
-            ))
-        )
+        try:
+            # Spróbuj najpierw xpath dla kanału online
+            img_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH,
+                    "//*[@id='live-channel-stream-information']/div/div/div[2]/div[1]/div/div/div[2]/a/div/div[1]/img"
+                ))
+            )
+        except:
+            # Jeśli nie, spróbuj xpath dla kanału offline
+            img_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH,
+                    "//*[@id='offline-channel-main-content']/div[2]/div[1]/div[1]/div[1]/div/div/div[2]/a/div/div/img"
+                ))
+            )
+
         img_url = img_element.get_attribute("src")
+        if not img_url:
+            # Fallback na obecny uniwersalny xpath (np. profile_image)
+            img_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH,
+                    "//img[contains(@src,'profile_image') or contains(@class,'channel-info__user-avatar')]"
+                ))
+            )
+            img_url = img_element.get_attribute("src")
+
         if img_url:
             download_image(img_url, folder, "twitch.jpg")
             profile_data["twitch"] = {
